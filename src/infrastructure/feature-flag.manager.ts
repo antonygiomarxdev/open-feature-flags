@@ -17,7 +17,7 @@ export class FeatureFlagManager {
     }));
   }
 
-  async isFeatureEnabled<T>(
+  async isFeatureEnabled(
     providerName: string,
     featureName: string,
   ): Promise<boolean> {
