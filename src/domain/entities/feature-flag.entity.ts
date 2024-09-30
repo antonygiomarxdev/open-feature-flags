@@ -1,10 +1,9 @@
 export interface FeatureFlag {
-    name: string;
-    enabled: boolean;
-    strategyType: string;
-    strategyParams: Record<string, unknown>[]
+  name: string;
+  enabled: boolean;
+  provider: string;
 }
 
 export interface FeatureFlagStrategy {
-    isEnabled<T>(userContext?: T): boolean;
+  isEnabled<T>(userContext?: T): boolean;
 }
