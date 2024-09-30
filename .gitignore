@@ -135,12 +135,5 @@ lib/
 .pnpm
 pnpm-debug.log
 
-# lockfile
-yarn.lock
-package-lock.json
-shrinkwrap.yaml
-pnpm-lock.yaml
-*-lock.json
-
 # Idea
 .idea/
