@@ -1,6 +1,6 @@
-import {Strategy} from "../../../lib/src/domain/feature-flag.entity";
+import {FeatureFlagStrategy} from "../entities/feature-flag.entity";
 
-export class PercentageStrategy implements Strategy {
+export class PercentageStrategy implements FeatureFlagStrategy {
     private readonly percentage: number;
 
     constructor(percentage: number) {
