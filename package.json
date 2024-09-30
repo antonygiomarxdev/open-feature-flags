@@ -1,6 +1,6 @@
 {
   "name": "open-feature-flags",
-  "version": "0.0.2-prealpha",
+  "version": "0.0.3-prealpha",
   "description": "Feature flags library with custom providers and strategies",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
