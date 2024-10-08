@@ -19,7 +19,7 @@ export class FeatureFlagManagerService {
   async isFeatureEnabled(
     providerName: string,
     featureName: string,
-    context: unknown,
+    context?: unknown,
     strategyParams?: unknown[],
   ): Promise<boolean> {
     const flags = await this.loadFeatureFlags(providerName);
