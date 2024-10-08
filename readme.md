@@ -1,195 +1,161 @@
 
 # open-feature-flags
 
-[![npm version](https://badge.fury.io/js/open-feature-flags.svg)](https://badge.fury.io/js/open-feature-flags)
+**open-feature-flags** es una librería modular desarrollada en TypeScript para gestionar **feature flags**. Su estructura sigue los principios de **Clean Architecture**, lo que garantiza la separación de responsabilidades y una fácil escalabilidad y mantenimiento. La librería permite habilitar o deshabilitar características de manera dinámica en una aplicación, mediante diferentes estrategias que pueden ser implementadas por el usuario final.
 
-A flexible TypeScript library for managing **feature flags** with support for custom **providers** and **strategies**. This library allows you to create, manage, and evaluate feature flags dynamically, offering integration with various data sources (providers) such as Firebase, MongoDB, or environment variables, and custom activation strategies.
+## Características principales
 
-### Table of Contents
-- [Introduction](#introduction)
-- [Installation](#installation)
-- [How it works](#how-it-works)
-    - [Providers](#providers)
-    - [Strategies](#strategies)
-- [Usage](#usage)
-    - [Registering Providers](#registering-providers)
-    - [Adding Custom Strategies](#adding-custom-strategies)
-    - [Example with Firebase](#example-with-firebase)
-- [Use Cases](#use-cases)
-    - [Feature Toggles for A/B Testing](#feature-toggles-for-ab-testing)
-    - [Rolling out new features gradually](#rolling-out-new-features-gradually)
-- [API](#api)
-- [Contributing](#contributing)
-- [License](#license)
+- **Modularidad**: Cada componente de la librería es fácilmente extensible.
+- **Estrategias Personalizadas**: Implementa tus propias estrategias para habilitar o deshabilitar feature flags.
+- **Providers Flexibles**: Puedes definir cómo y desde dónde cargar los feature flags (por ejemplo, desde variables de entorno, bases de datos, etc.).
+- **Aplicación de Clean Architecture**: La lógica de negocio está desacoplada de las implementaciones, permitiendo un mantenimiento más sencillo y la posibilidad de agregar nuevas funcionalidades sin romper el código existente.
 
-## Introduction
+## Estructura de Carpetas
 
-The **open-feature-flags** library is designed to provide a flexible, modular, and easy-to-use system for managing feature flags in your applications. Feature flags allow you to control the visibility of features in your software based on dynamic rules or configurations. This makes it easier to perform A/B testing, gradual rollouts, and customized user experiences without needing to deploy new code constantly.
+La estructura sigue **Clean Architecture**, organizando el proyecto en capas claras:
 
-This library supports:
-- **Custom Providers**: Feature flags can be loaded from various data sources such as Firebase, MongoDB, or even environment variables.
-- **Custom Strategies**: Define strategies that determine when a feature flag is enabled or disabled. For example, you can base the feature flag on user groups, percentages, or any custom logic.
+```
+src/
+├── application/
+│   ├── services/
+│   │   └── feature-flag-manager.service.ts
+├── domain/
+│   ├── entities/
+│   │   └── feature-flag.entity.ts
+│   ├── repositories/
+│   │   ├── provider.repository.ts
+│   │   └── strategy.repository.ts
+│   └── providers/
+│       └── provider.interface.ts
+│   └── strategies/
+│       ├── feature-flag.strategy.ts
+├── infrastructure/
+│   ├── persistence/
+│   │   ├── provider.repository-impl.ts
+│   │   └── strategy.repository-impl.ts
+│   └── providers/
+│       └── custom-provider-impl.ts
+└── strategies/
+    └── percentage.strategy-impl.ts
+```
 
-## Installation
+### Descripción de Carpetas
 
-To install the **open-feature-flags** library, run:
+- **application/**: Contiene los casos de uso y servicios como `FeatureFlagManagerService`.
+- **domain/**: Define las entidades y contratos (interfaces) que forman parte de la lógica de negocio. Aquí es donde se encuentran las interfaces de los repositorios y estrategias.
+- **infrastructure/**: Implementaciones concretas de los repositorios y proveedores que interactúan con la infraestructura externa (como bases de datos, APIs, etc.).
+- **strategies/**: Aquí se implementan estrategias personalizadas, como `PercentageStrategyImpl`.
+
+## Instalación
+
+Instala la librería usando **npm** o **pnpm**:
 
 ```bash
 npm install open-feature-flags
 ```
 
-or using `pnpm`:
+o con **pnpm**:
 
 ```bash
 pnpm add open-feature-flags
 ```
 
-## How it works
+## Uso
 
-### Providers
+### 1. Configuración del FeatureFlagManager
 
-Providers are responsible for loading the feature flags from a data source, such as a database, API, or environment variables. These flags are then evaluated using the strategy assigned to them.
-
-A provider needs to implement the following interface:
+Para usar la librería, primero necesitas registrar tus estrategias y providers en el `FeatureFlagManagerService`:
 
 ```typescript
-export interface CustomProvider {
-    loadFeatureFlags(): Promise<FeatureFlag[]>;
+import { FeatureFlagManagerService } from './application/services/feature-flag-manager.service';
+import { ProviderRepositoryImpl } from './infrastructure/persistence/provider.repository-impl';
+import { StrategyRepositoryImpl } from './infrastructure/persistence/strategy.repository-impl';
+import { CustomProviderImpl } from './infrastructure/providers/custom-provider-impl';
+import { PercentageStrategyImpl } from './infrastructure/strategies/percentage.strategy-impl';
+
+// Inicializamos los repositorios
+const providerRepository = new ProviderRepositoryImpl();
+const strategyRepository = new StrategyRepositoryImpl();
+
+// Registramos los providers
+providerRepository.registerProvider('custom', new CustomProviderImpl());
+
+// Registramos las estrategias
+strategyRepository.registerStrategy('percentage', new PercentageStrategyImpl());
+
+// Inicializamos el FeatureFlagManagerService
+const featureFlagManagerService = new FeatureFlagManagerService(providerRepository, strategyRepository);
+```
+
+### 2. Verificar si un feature está habilitado
+
+Una vez configurado, puedes usar el `FeatureFlagManagerService` para verificar si una característica está habilitada:
+
+```typescript
+const context = { userId: 12345 };
+const isEnabled = await featureFlagManagerService.isFeatureEnabled('custom', 'new-ui', context, [50]);
+console.log(`¿La nueva UI está habilitada para el usuario 12345? ${isEnabled}`);
+```
+
+### 3. Crear tu propia estrategia
+
+Puedes crear tus propias estrategias implementando la interfaz `FeatureFlagStrategy`:
+
+```typescript
+import { FeatureFlagStrategy } from '../domain/strategies/feature-flag.strategy';
+
+export class CustomStrategyImpl implements FeatureFlagStrategy {
+  isEnabled(context: unknown): boolean {
+    // Lógica personalizada
+    return true; // habilita siempre
+  }
 }
 ```
 
-You can register multiple providers and switch between them at runtime.
-
-### Strategies
-
-A strategy defines the logic to determine whether a feature is enabled or disabled for a given context (like a user, a session, or any other piece of data).
-
-Here's a simple example of a percentage-based strategy:
+Luego registra esta estrategia en el `StrategyRepository`:
 
 ```typescript
-import { FeatureFlagStrategy } from 'open-feature-flags';
-
-export class FeatureFlagStrategy implements FeatureFlagStrategy {
-    private readonly percentage: number;
-
-    constructor(percentage: number) {
-        this.percentage = percentage;
-    }
-
-    isEnabled(userContext: any): boolean {
-        const userIdHash = userContext.userId % 100;
-        return userIdHash < this.percentage;
-    }
-}
+strategyRepository.registerStrategy('custom', new CustomStrategyImpl());
 ```
 
-## Usage
+## Pruebas
 
-### Registering Providers
+Para ejecutar las pruebas, simplemente utiliza **Jest** u otro framework de pruebas. Por ejemplo:
 
-First, you need to register the providers that will load your feature flags. For example, you can create a Firebase-based provider:
-
-```typescript
-import { FirebaseFeatureFlagProvider } from './providers/firebase-feature-flag.provider';
-import { ProviderRegistry } from 'open-feature-flags';
-
-const providerRegistry = new ProviderRegistry();
-
-// Register Firebase provider
-providerRegistry.registerProvider('firebase', new FirebaseFeatureFlagProvider(firestore));
+```bash
+npm run test
 ```
 
-### Adding Custom Strategies
+Las pruebas se organizan de la misma manera que el código fuente, y están ubicadas en la carpeta **tests/**:
 
-You can also register strategies to handle different conditions for enabling or disabling flags. For example, the `FeatureFlagStrategy` can activate a feature flag for a specific percentage of users.
-
-```typescript
-import { StrategyRegistry } from 'open-feature-flags';
-import { FeatureFlagStrategy } from './strategies/percentage.strategy';
-
-const strategyRegistry = new StrategyRegistry();
-
-// Register percentage strategy
-strategyRegistry.registerStrategy('percentage', FeatureFlagStrategy);
+```
+tests/
+├── domain/
+│   ├── providers/
+│   │   └── provider.interface.test.ts
+│   └── strategies/
+│       └── percentage.strategy.test.ts
+├── infrastructure/
+│   ├── providers/
+│   │   └── custom-provider-impl.test.ts
+│   └── persistence/
+│       ├── provider.repository-impl.test.ts
+│       └── strategy.repository-impl.test.ts
+└── application/
+    └── services/
+        └── feature-flag-manager.service.test.ts
 ```
 
-### Example with Firebase
+## Contribuciones
 
-```typescript
-import { FeatureFlagManagerService, ProviderRegistry, StrategyRegistry } from 'open-feature-flags';
-import { FirebaseFeatureFlagProvider } from './providers/firebase-feature-flag.provider';
-import { FeatureFlagStrategy } from './strategies/percentage.strategy';
+Contribuciones, issues y solicitudes de nuevas características son bienvenidas. Si deseas contribuir:
 
-// Initialize Firestore
-const firestore = firebase.firestore();
+1. Haz un **fork** del repositorio.
+2. Crea una nueva rama para tu feature (`git checkout -b feature/nueva-feature`).
+3. Haz commit de tus cambios (`git commit -m 'Agrega nueva feature'`).
+4. Haz push a tu rama (`git push origin feature/nueva-feature`).
+5. Crea un **pull request**.
 
-// Initialize registries
-const providerRegistry = new ProviderRegistry();
-const strategyRegistry = new StrategyRegistry();
+## Licencia
 
-// Register providers and strategies
-providerRegistry.registerProvider('firebase', new FirebaseFeatureFlagProvider(firestore));
-strategyRegistry.registerStrategy('percentage', FeatureFlagStrategy);
-
-// Initialize feature flag manager
-const featureFlagManager = new FeatureFlagManagerService(providerRegistry, strategyRegistry);
-
-// Check if a feature is enabled
-const isFeatureEnabled = await featureFlagManager.isFeatureEnabled('firebase', 'new-ui', { userId: 123 });
-console.log(`Is New UI Enabled? ${isFeatureEnabled}`);
-```
-
-## Use Cases
-
-### Feature Toggles for A/B Testing
-
-One of the most common uses of feature flags is to perform **A/B testing**. You can show a new feature only to a subset of users, and measure the results before rolling it out to everyone.
-
-```typescript
-const isExperimentEnabled = await featureFlagManager.isFeatureEnabled('firebase', 'experiment', { userId: 123 });
-```
-
-### Rolling out new features gradually
-
-You can use strategies like `FeatureFlagStrategy` to gradually roll out new features. For example, you could enable a new UI for 20% of your users initially and increase the percentage over time.
-
-```typescript
-const isNewFeatureEnabled = await featureFlagManager.isFeatureEnabled('firebase', 'new-ui', { userId: 567 });
-```
-
-## API
-
-### `FeatureFlagManagerService`
-
-Manages the lifecycle of feature flags, allowing you to check if a feature is enabled.
-
-- **`isFeatureEnabled(providerName: string, featureName: string, userContext: any): Promise<boolean>`**: Returns `true` if the feature is enabled, based on the registered providers and strategies.
-
-### `ProviderRegistry`
-
-Manages the list of providers from which feature flags are loaded.
-
-- **`registerProvider(name: string, provider: CustomProvider): void`**: Registers a new provider.
-- **`loadFeatureFlags(providerName: string): Promise<FeatureFlag[]>`**: Loads feature flags from the specified provider.
-
-### `StrategyRegistry`
-
-Manages the strategies used to evaluate feature flags.
-
-- **`registerStrategy(name: string, strategy: new (...args: any[]) => FeatureFlagStrategy): void`**: Registers a new strategy.
-- **`getStrategy(name: string, ...args: any[]): FeatureFlagStrategy`**: Returns the registered strategy.
-
-## Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/antonygiomarxdev/open-feature-flags/issues) to report any bug or request new features.
-
-### How to contribute:
-1. Fork the project.
-2. Create a new feature branch (`git checkout -b feature/new-feature`).
-3. Commit your changes (`git commit -m 'Add new feature'`).
-4. Push the branch (`git push origin feature/new-feature`).
-5. Create a new pull request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt) file for details.
+Este proyecto está licenciado bajo la **MIT License**.
