@@ -1,10 +1,8 @@
-import {
-  CustomProvider,
-  ProviderRegistry,
-} from "../../../domain/providers/provider.registry";
 import { FeatureFlag } from "../../../domain/entities/feature-flag.entity";
+import { Provider } from "../../../domain/providers/provider.interface";
+import { ProviderRepositoryImpl } from "../../../infrastructure/persistence/provider.repository-impl";
 
-class MockProvider implements CustomProvider {
+class MockProvider implements Provider {
   async loadFeatureFlags(): Promise<FeatureFlag[]> {
     return [
       {
@@ -18,7 +16,7 @@ class MockProvider implements CustomProvider {
 
 describe("ProviderRegistry", () => {
   it("should register and load a provider", async () => {
-    const providerRegistry = new ProviderRegistry();
+    const providerRegistry = new ProviderRepositoryImpl();
     const mockProvider = new MockProvider();
     providerRegistry.registerProvider("mock", mockProvider);
 
@@ -29,7 +27,7 @@ describe("ProviderRegistry", () => {
   });
 
   it("should throw an error if provider is not registered", async () => {
-    const providerRegistry = new ProviderRegistry();
+    const providerRegistry = new ProviderRepositoryImpl();
     await expect(
       providerRegistry.loadFeatureFlags("non-existent"),
     ).rejects.toThrow("Provider non-existent is not registered.");

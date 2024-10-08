@@ -1,10 +1,11 @@
 import { FeatureFlagStrategy } from "../../domain/strategies/feature-flag.strategy";
 import { FeatureFlag } from "../../domain/entities/feature-flag.entity";
-import { StrategyRegistry } from "../../../dist/src";
 import { FeatureFlagManagerService } from "../../application/services/feature-flag-manager.service";
 import { Provider } from "../../domain/providers/provider.interface";
 import { ProviderRepository } from "../../domain/repositories/provider.repository";
 import { ProviderRepositoryImpl } from "../../infrastructure/persistence/provider.repository-impl";
+import { StrategyRepository } from "../../domain/repositories/strategy.repository";
+import { StrategyRepositoryImpl } from "../../infrastructure/persistence/strategy.repository-impl";
 
 class MockProvider implements Provider {
   async loadFeatureFlags(): Promise<FeatureFlag[]> {
@@ -26,12 +27,12 @@ class MockStrategy implements FeatureFlagStrategy {
 
 describe("FeatureFlagManager", () => {
   let providerRegistry: ProviderRepository;
-  let strategyRegistry: StrategyRegistry;
+  let strategyRegistry: StrategyRepository;
   let featureFlagManager: FeatureFlagManagerService;
 
   beforeEach(() => {
     providerRegistry = new ProviderRepositoryImpl();
-    strategyRegistry = new StrategyRegistry();
+    strategyRegistry = new StrategyRepositoryImpl();
 
     const mockProvider = new MockProvider();
     const mockStrategy = new MockStrategy();

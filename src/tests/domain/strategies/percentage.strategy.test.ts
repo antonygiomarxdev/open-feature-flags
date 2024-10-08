@@ -1,8 +1,8 @@
-import { FeatureFlagStrategy } from "../../../domain/strategies/feature-flag.strategy";
+import { PercentageStrategy } from "../../../infrastructure/strategies/percentage.strategy-impl";
 
 describe("PercentageStrategy", () => {
   it("should return true or false based on the percentage", () => {
-    const strategy = new FeatureFlagStrategy(50);
+    const strategy = new PercentageStrategy();
     const result = strategy.isEnabled();
     expect(result).toBe(result || !result);
   });
