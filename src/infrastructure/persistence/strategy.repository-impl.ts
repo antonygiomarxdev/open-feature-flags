@@ -1,7 +1,8 @@
-import { FeatureFlagStrategy } from "../entities/feature-flag.entity";
+import { StrategyRepository } from "../../domain/repositories/strategy.repository";
+import { FeatureFlagStrategy } from "../../domain/strategies/feature-flag.strategy";
 
-export class StrategyRegistry {
-  private strategies: Record<string, FeatureFlagStrategy> = {};
+export class StrategyRepositoryImpl implements StrategyRepository {
+  private strategies: { [key: string]: FeatureFlagStrategy } = {};
 
   registerStrategy(name: string, strategy: FeatureFlagStrategy): void {
     this.strategies[name] = strategy;

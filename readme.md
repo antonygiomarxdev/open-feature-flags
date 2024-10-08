@@ -69,7 +69,7 @@ Here's a simple example of a percentage-based strategy:
 ```typescript
 import { FeatureFlagStrategy } from 'open-feature-flags';
 
-export class PercentageStrategy implements FeatureFlagStrategy {
+export class FeatureFlagStrategy implements FeatureFlagStrategy {
     private readonly percentage: number;
 
     constructor(percentage: number) {
@@ -101,24 +101,24 @@ providerRegistry.registerProvider('firebase', new FirebaseFeatureFlagProvider(fi
 
 ### Adding Custom Strategies
 
-You can also register strategies to handle different conditions for enabling or disabling flags. For example, the `PercentageStrategy` can activate a feature flag for a specific percentage of users.
+You can also register strategies to handle different conditions for enabling or disabling flags. For example, the `FeatureFlagStrategy` can activate a feature flag for a specific percentage of users.
 
 ```typescript
 import { StrategyRegistry } from 'open-feature-flags';
-import { PercentageStrategy } from './strategies/percentage.strategy';
+import { FeatureFlagStrategy } from './strategies/percentage.strategy';
 
 const strategyRegistry = new StrategyRegistry();
 
 // Register percentage strategy
-strategyRegistry.registerStrategy('percentage', PercentageStrategy);
+strategyRegistry.registerStrategy('percentage', FeatureFlagStrategy);
 ```
 
 ### Example with Firebase
 
 ```typescript
-import { FeatureFlagManager, ProviderRegistry, StrategyRegistry } from 'open-feature-flags';
+import { FeatureFlagManagerService, ProviderRegistry, StrategyRegistry } from 'open-feature-flags';
 import { FirebaseFeatureFlagProvider } from './providers/firebase-feature-flag.provider';
-import { PercentageStrategy } from './strategies/percentage.strategy';
+import { FeatureFlagStrategy } from './strategies/percentage.strategy';
 
 // Initialize Firestore
 const firestore = firebase.firestore();
@@ -129,10 +129,10 @@ const strategyRegistry = new StrategyRegistry();
 
 // Register providers and strategies
 providerRegistry.registerProvider('firebase', new FirebaseFeatureFlagProvider(firestore));
-strategyRegistry.registerStrategy('percentage', PercentageStrategy);
+strategyRegistry.registerStrategy('percentage', FeatureFlagStrategy);
 
 // Initialize feature flag manager
-const featureFlagManager = new FeatureFlagManager(providerRegistry, strategyRegistry);
+const featureFlagManager = new FeatureFlagManagerService(providerRegistry, strategyRegistry);
 
 // Check if a feature is enabled
 const isFeatureEnabled = await featureFlagManager.isFeatureEnabled('firebase', 'new-ui', { userId: 123 });
@@ -151,7 +151,7 @@ const isExperimentEnabled = await featureFlagManager.isFeatureEnabled('firebase'
 
 ### Rolling out new features gradually
 
-You can use strategies like `PercentageStrategy` to gradually roll out new features. For example, you could enable a new UI for 20% of your users initially and increase the percentage over time.
+You can use strategies like `FeatureFlagStrategy` to gradually roll out new features. For example, you could enable a new UI for 20% of your users initially and increase the percentage over time.
 
 ```typescript
 const isNewFeatureEnabled = await featureFlagManager.isFeatureEnabled('firebase', 'new-ui', { userId: 567 });
@@ -159,7 +159,7 @@ const isNewFeatureEnabled = await featureFlagManager.isFeatureEnabled('firebase'
 
 ## API
 
-### `FeatureFlagManager`
+### `FeatureFlagManagerService`
 
 Manages the lifecycle of feature flags, allowing you to check if a feature is enabled.
 
