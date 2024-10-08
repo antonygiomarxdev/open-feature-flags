@@ -1,4 +1,4 @@
-import { FeatureFlagStrategy } from "../../domain/strategies/feature-flag.strategy";
+import { FeatureFlagStrategy } from "../../domain";
 
 export class PercentageStrategy implements FeatureFlagStrategy {
   isEnabled(): boolean {
